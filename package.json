@@ -1,0 +1,15 @@
+{
+  "name": "shitcord_server",
+  "version": "0.0.1",
+  "description": "Server for Shitcord",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kotisoff",
+  "license": "ISC",
+  "dependencies": {
+    "uuid": "^9.0.0",
+    "ws": "^8.13.0"
+  }
+}
