@@ -6,18 +6,18 @@ const srv = new WebScoket('ws://localhost:8080')
 let publicKey
 
 srv.onopen = event => {
-    console.log('Соединён',event)
+    console.log('Подключено.')
 }
 
 srv.onmessage = msg =>{
     // console.log('[SERVER]',msg)
-    if(JSON.parse(msg).type=='pubKey'){
+    if(msg.type=='pubKey'){
         publicKey=JSON.parse(msg).data
-        console.log('public key updated.')
+        console.log('Публичный ключ создан.')
     }
 
 }
 
 srv.onclose = event => {
-    console.log('SERVER CLOSED',JSON.stringify(event))
+    console.log('СЕРВЕР ЗАКРЫТ',JSON.stringify(event))
 }

@@ -22,7 +22,7 @@ const port = config.port
 const wss = new WebScoket.Server({ port: port })
 
 wss.on('listening', () => {
-    console.log('Прослушиваем', port)
+    console.log('Прослушиваем порт', port)
 })
 
 let clients = JSON.parse('{}'), uuids = []
@@ -30,7 +30,7 @@ wss.on('connection', ws => {
     let id = uuid()
     clients[id] = ws
     ws.send(JSON.stringify({type:'pubKey',data: publicKey}))
-    console.log(id, 'connected.')
+    console.log(id, 'присоединился.')
     ws.on('message', msg => {
         console.log('[',id,']',msg)
         try{
@@ -42,7 +42,7 @@ wss.on('connection', ws => {
                 Buffer.from(JSON.parse(msg).data,'base64')
             );
             console.log('[',id,']',decryptData.toString())
-        }catch(err){console.log('decrypt failed:',err)}
+        }catch(err){console.log('Не удалось расшифровать:',err)}
     })
     let cryptData = crypto.publicEncrypt({
         key: publicKey,
@@ -52,6 +52,6 @@ wss.on('connection', ws => {
     ws.send(JSON.stringify({type:'cryptData',data: cryptData.toString('base64')}))
     ws.on('close', function () {
         delete clients[id]
-        console.log(id, 'disconnected.')
+        console.log(id, 'отключился.')
     })
 })
