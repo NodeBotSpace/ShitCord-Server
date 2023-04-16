@@ -9,26 +9,39 @@ const port = config.port
 const wss = new WebSocket.Server({ port: port })
 
 wss.on('listening', () => {
-    console.log('Прослушиваем порт', port)
+    console.log('прослушка порта ', port)
 })
-let type
-let clients = JSON.parse('{}'), uuids = []
-wss.on('connection', ws => {
+let clients = JSON.parse('{}')
+let online = JSON.parse('{}')
+let IDTable = new Map()
+wss.on('connection', ws =>{
     let ID = uuid()
-    clients[ID] = ws
-    console.log(ID, 'присоединился.')
-    ws.send(JSON.stringify({type: 'uuid', data: ID}))
-    ws.on('message', msg => {
-        console.log('получен месседж')
-        type = JSON.parse(msg.type)
-        console.log(type)
-        console.log(msg.toString('utf-8'))
-        if(type == 'nick') {
-            console.log('получен никнеймус')
+    let nick
+    console.log(`какой то ${ID} присоединился`)
+    ws.send(JSON.stringify({ type: 'uuid', data: ID}))
+    ws.on('message', event => {
+        let msg
+        try{
+            msg = JSON.parse(event.toString('utf-8'))
+        }catch{msg=event.toString('utf-8')}
+        console.log('msg:',msg)
+        if(msg.type == 'nick') {
+           console.log('получен никнейм')
+           nick = msg.data
+           if(online[nick]=ws) {
+            ws.close
+            console.log('такой челик уже есть понял да?')
+           } else {
+            IDTable.set(nick, ID) 
+            console.log(IDTable.get(ID))
+            online[nick] = ws
+            console.log(IDTable.size)
+           } 
         }
     })
     ws.on('close', function () {
-        delete clients[ID]
-        console.log(ID, 'отключился.')
+        console.log(nick, ' отключился')
+        delete clients[nick]
     })
 })
+// ебашь

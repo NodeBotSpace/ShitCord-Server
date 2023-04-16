@@ -5,7 +5,7 @@ const srv = new WebScoket('ws://localhost:8080')
 
 let UUID
 let messg
-let nickname = 'tikenshot'
+let nickname = 'tikenshot1'
 srv.onopen = event => {
     console.log('Подключено.')
     srv.send(JSON.stringify({type: 'nick', data: nickname}))
