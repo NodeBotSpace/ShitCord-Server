@@ -3,21 +3,19 @@ const crypto = require('node:crypto')
 
 const srv = new WebScoket('ws://localhost:8080')
 
-let publicKey
-
+let UUID
+let messg
+let nickname = 'tikenshot'
 srv.onopen = event => {
     console.log('Подключено.')
+    srv.send(JSON.stringify({type: 'nick', data: nickname}))
 }
 
 srv.onmessage = msg =>{
-    // console.log('[SERVER]',msg)
-    if(msg.type=='pubKey'){
-        publicKey=JSON.parse(msg).data
-        console.log('Публичный ключ создан.')
-    }
-
+    messg = JSON.parse(msg.data)
+    console.log(messg)
 }
 
 srv.onclose = event => {
-    console.log('СЕРВЕР ЗАКРЫТ',JSON.stringify(event))
+    console.log('СЕРВЕР ЗАКРЫТ')
 }
