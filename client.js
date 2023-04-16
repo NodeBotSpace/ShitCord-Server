@@ -3,7 +3,7 @@ const crypto = require('node:crypto')
 
 const srv = new WebScoket('ws://localhost:8080')
 
-let key, iv, cipher, decipher
+let key
 
 srv.onopen = event => {
     console.log('Подключено.')
@@ -13,12 +13,16 @@ srv.onmessage = event => {
     const msg = JSON.parse(event.data)
     //Выполняем проверку на публичный ключ
     if (msg.type == 'msgKey') {
-        key = msg.data
-        cipher = crypto.createCipheriv('aes-256-ccm',key,iv)
-        decipher = crypto.createDecipheriv('aes-256-ccm',key,iv)
-        console.log('Ключ получен.')
+        console.log(msg)
+        key = Buffer.from(msg.data,'hex')
+        // cipher = crypto.createCipheriv('aes-256-ccm',key,iv)
+        console.log('Ключ получен.',key)
     } else {
-        // try {const decryptData = crypto.publicDecrypt({key: publicKey,padding: crypto.constants.RSA_PKCS1_OAEP_PADDING},Buffer.from(JSON.parse(msg.data).data, 'base64'));console.log('[Server]', decryptData.toString())} catch (err) {console.log('Не удалось расшифровать:', err)}
+        iv = Buffer.from(msg.iv,'hex')
+        const decipher = crypto.createDecipheriv('aes-256-cbc',key,iv)
+        const decryptedBuffer = Buffer.concat([decipher.update(Buffer.from(msg.data, 'hex')), decipher.final()]);
+        const decryptedMessage = decryptedBuffer.toString('utf8');
+        console.log('[Server]',decryptedMessage)
     }
 }
 

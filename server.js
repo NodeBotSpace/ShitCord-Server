@@ -5,11 +5,8 @@ const fs = require('node:fs')
 
 // const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {modulusLength: 4096,publicKeyEncoding: {type: 'spki',format: 'pem'},privateKeyEncoding: {type: 'pkcs8',format: 'pem'}});
 
-const key = crypto.randomBytes(32).toString('hex')
-const cipher = crypto.createCipheriv('aes-256-ccm',key)
-const decipher = crypto.createDecipheriv('aes-256-ccm',key)
-let iv
-console.log('Ключ:',key)
+const key = crypto.randomBytes(32)
+console.log('Ключ:',key.toString('hex'))
 
 const config = { port: 8080 }
 const port = config.port
@@ -20,13 +17,21 @@ wss.on('listening', () => {
     console.log('Прослушиваем порт', port)
 })
 
-let clients = JSON.parse('{}'), uuids = []
+let clients = JSON.parse('{}')
 wss.on('connection', ws => {
     let id = uuid()
     clients[id] = ws
-    iv = crypto.randomBytes(16)
-    ws.send(JSON.stringify({type:'msgKey',data: key, iv: iv})) // Крайне небезопасный способ передачи ключа. Переделать. Когда нибудь...
+    ws.send(JSON.stringify({type:'msgKey',data: key.toString('hex')})) // Крайне небезопасный способ передачи ключа. Переделать. Когда нибудь...
     console.log(id, 'присоединился.')
+    
+    // Отправляем всякую хуйню
+
+    const message = "HELLO WORLD!!!!"
+    const iv = crypto.randomBytes(16)
+    cipher = crypto.createCipheriv('aes-256-cbc',key,iv)
+    const encryptedBuffer = Buffer.concat([cipher.update(message, 'utf8'), cipher.final()]);
+    const encryptedMessage = encryptedBuffer.toString('hex');
+    ws.send(JSON.stringify({type:'msg',data: encryptedMessage, iv:iv.toString('hex')}))
 
     ws.on('message', msg => {
         // console.log('[',id,']',msg)
