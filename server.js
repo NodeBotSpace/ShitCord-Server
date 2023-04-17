@@ -11,37 +11,20 @@ const wss = new WebSocket.Server({ port: port })
 wss.on('listening', () => {
     console.log('прослушка порта ', port)
 })
-let clients = JSON.parse('{}')
 let online = JSON.parse('{}')
 let IDTable = new Map()
+let msg
 wss.on('connection', ws =>{
-    let ID = uuid()
-    let nick
-    console.log(`какой то ${ID} присоединился`)
-    ws.send(JSON.stringify({ type: 'uuid', data: ID}))
+    console.log('подключился какой-то клиент')
     ws.on('message', event => {
-        let msg
-        try{
-            msg = JSON.parse(event.toString('utf-8'))
-        }catch{msg=event.toString('utf-8')}
-        console.log('msg:',msg)
-        if(msg.type == 'nick') {
-           console.log('получен никнейм')
-           nick = msg.data
-           if(online[nick]=ws) {
-            ws.close
-            console.log('такой челик уже есть понял да?')
-           } else {
-            IDTable.set(nick, ID) 
-            console.log(IDTable.get(ID))
-            online[nick] = ws
-            console.log(IDTable.size)
-           } 
+        if(event.type == 'nick') {
+            msg = JSON.parse(event.data)
+            console.log(msg)
         }
-    })
+           
+        })
     ws.on('close', function () {
-        console.log(nick, ' отключился')
-        delete clients[nick]
+        console.log('кто-то отключился')
     })
 })
 // ебашь
