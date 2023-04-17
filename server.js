@@ -1,4 +1,4 @@
-const WebScoket = require('ws')
+const WebSocket = require('ws')
 const uuid = require('uuid').v4
 const crypto = require('node:crypto')
 const fs = require('node:fs')
@@ -19,7 +19,7 @@ const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
 const config = { port: 8080 }
 const port = config.port
 
-const wss = new WebScoket.Server({ port: port })
+const wss = new WebSocket.Server({ port: port })
 
 wss.on('listening', () => {
     console.log('Прослушиваем порт', port)
