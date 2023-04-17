@@ -7,9 +7,12 @@ const srv = new WebScoket('ws://localhost:8080')
 
 let messg
 let nickname = 'tikenshot'
+<<<<<<< HEAD
 const ID = uuid()
 let IDs = new Map()
 IDs.set(nickname, ID)
+=======
+>>>>>>> parent of 1cc9d53 (2)
 srv.onopen = event => {
     console.log('Подключено.')
     srv.send(JSON.stringify({type: 'nick', data: nickname}))
