@@ -25,6 +25,7 @@ wss.on('connection', ws => {
     // Строка выше - крайне небезопасный способ передачи ключа.
     // Для неё и была создана отдельная ветка, чтобы не портить основную.
     console.log(id, 'присоединился.')
+    ws.send(msgcrypt.encryptMessage('Your UUID: '+id,'msg',key))
     
     // Отправляем всякую фигню для проверки шифрования
     const message = "HELLO WORLD!!!!"
@@ -35,6 +36,7 @@ wss.on('connection', ws => {
 
         if (msg.type == "msg") {
             console.log('[Client]',msgcrypt.decryptMessage(msg,key))
+            ws.send(msgcrypt.encryptMessage('client msg: '+msgcrypt.decryptMessage(msg,key),'msg',key))
         }
     })
 
