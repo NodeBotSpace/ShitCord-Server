@@ -35,13 +35,15 @@ wss.on('connection', ws => {
         const msg = JSON.parse(event)
 
         if (msg.type == "msg") {
-            console.log('[Client]',msgcrypt.decryptMessage(msg,key))
+            let decryptedMessage = msgcrypt.decryptMessage(msg,key)
+            console.log('[Client]',decryptedMessage)
             ws.send(msgcrypt.encryptMessage('client msg: '+msgcrypt.decryptMessage(msg,key),'msg',key))
+            if(decryptedMessage=="/kickme"){ws.close(1000,"Причина посылания нахуй: Еблан")}
         }
     })
 
-    ws.on('close', function () {
+    ws.on('close', eventcode => {
         delete clients[id]
-        console.log(id, 'отключился.')
+        console.log(id,'отключился.',eventcode)
     })
 })
