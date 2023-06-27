@@ -1,46 +1,84 @@
-const WebSocket = require('ws')
-const uuid = require('uuid').v4
-const crypto = require('node:crypto')
-const fs = require('node:fs')
+const WebSocket = require('ws');
+const uuid = require('uuid').v4;
+const crypto = require('node:crypto');
+const msgcrypt = require('./msgcrypt.js');
+const fs = require('node:fs');
+
+// Получаем список пользователей
+
+if(!fs.existsSync('./serverdata')) fs.mkdirSync('./serverdata')
+let users = JSON.parse('{}')
+try{
+    console.log('importing users')
+    users=require('./serverdata/usrDb.json')
+}catch{
+    fs.writeFileSync('./serverdata/usrDb.json','{}')
+}
 
 const config = { port: 8080 }
 const port = config.port
 
-const wss = new WebSocket.Server({ port: port })
+function constrcutMsg(type,data){
+    return JSON.stringify({type: type, data: msgcrypt.encryptMessage(data,key)})
+}
 
 wss.on('listening', () => {
-    console.log('прослушка порта ', port)
+    console.log('Прослушиваем порт', port)
 })
-let clients = JSON.parse('{}')
-let online = JSON.parse('{}')
-let IDTable = new Map()
-wss.on('connection', ws =>{
-    let ID = uuid()
-    let nick
-    console.log(`какой то ${ID} присоединился`)
-    ws.send(JSON.stringify({ type: 'uuid', data: ID}))
+
+let clients = JSON.parse('{}');
+wss.on('connection', ws => {
+    let id = uuid();
+    clients[id] = ws;
+    ws.send(JSON.stringify({ type: 'key', data: key.toString('hex') }));
+    // Строка выше - крайне небезопасный способ передачи ключа.
+    // Для неё и была создана отдельная ветка, чтобы не портить основную.
+    console.log(id, 'присоединился.');
+
+    ws.send(constrcutMsg("uuid",id))
+    ws.send(constrcutMsg("msg",'Your UUID: ' + id));
+
     ws.on('message', event => {
-        let msg
-        try{
-            msg = JSON.parse(event.toString('utf-8'))
-        }catch{msg=event.toString('utf-8')}
-        console.log('msg:',msg)
-        if(msg.type == 'nick') {
-           console.log('получен никнейм')
-           nick = msg.data
-           if(online[nick]==msg.data) {
-            wss.close
-            console.log('такой челик уже есть понял да?')
-           } else {
-            IDTable.set(nick, ID) 
-            console.log(IDTable.get(nick))
-            online[nick] = msg.data
-            console.log(IDTable.size)
-           } 
+        const msg = JSON.parse(event);
+
+        if(msg.type=="auth"){
+            let userData=[]
+            userData.push(msgcrypt.decryptMessage(msg.login,key),msgcrypt.decryptMessage(msg.password,key))
+            if(users[userData[0]]){
+                if(users[userData[0]]===userData[1]){ws.send(constrcutMsg('msg','Залогинилисьб лять'))}
+                console.log(users)
+            }
+            else{
+                users[userData[0]]=userData[1]
+                ws.send(constrcutMsg('msg','Зарегалисьс ука'))
+            }
+        }
+
+        if (msg.type == "msg") {
+            let decryptedMessage = msgcrypt.decryptMessage(msg.data,key)
+            console.log('[Client]',decryptedMessage)
+            ws.send(constrcutMsg("msg", 'client msg: '+msgcrypt.decryptMessage(msg.data,key)))
+            if(decryptedMessage=="/kickme"){ws.close(1000,"Причина посылания нахуй: Еблан")}
         }
     })
-    ws.on('close', function () {
-        console.log(nick, ' отключился')
-        delete online[nick]
+
+    ws.on('close', eventcode => {
+        delete clients[id]
+        console.log(id,'отключился.',eventcode)
     })
+})
+
+function saveAll(show){
+    if(show) console.log("saving...")
+    fs.writeFileSync(path.join(__dirname,'./serverdata/usrDb.json'),JSON.stringify(users),e=>{})
+}
+
+setInterval(()=>{
+    saveAll()
+},180000)
+
+process.on("SIGINT",()=>{
+    console.log(users)
+    saveAll(true)
+    process.exit()
 })
